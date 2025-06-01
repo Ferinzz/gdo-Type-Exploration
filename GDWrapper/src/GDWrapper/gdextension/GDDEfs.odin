@@ -13,7 +13,7 @@ package gdextension
 //Data itself is in the _data union : https://github.com/godotengine/godot/blob/45fc515ae3574e9c1f9deacaa6960dec68a7d38b/core/variant/variant.h#L263
 //After testing won't even need to use Godot's functions. index 1 is the type enum, index 2 is the _data, I assume index 3 is ref counting or array length?
 Variant :: struct {
-    data: [3]u64
+    data: [3]rawptr
 }
 
 //optional in Godot. These are mainly to define pointer etc variable lengths in C.
@@ -95,7 +95,7 @@ PackedInt32Array ::  [2]u64
 
 PackedInt64Array ::  [2]u64
 
-PackedFloat32Array ::  [1]u64
+PackedFloat32Array :: struct{ data: u64}
 
 PackedFloat64Array ::  [2]u64
 

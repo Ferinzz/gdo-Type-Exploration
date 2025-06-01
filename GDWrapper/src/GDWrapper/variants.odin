@@ -42,16 +42,16 @@ variantfrom: VariantFrom
 
 ArrayHelp :: struct {
     //Godot needs to allocate memory for the array and track it on its side.
-    packedf32create0: GDE.InterfaceVariantGetPtrConstructor,
-    packedf32create1: GDE.InterfaceVariantGetPtrConstructor, //create from another packedf32
-    packedf32create2: GDE.InterfaceVariantGetPtrConstructor, //create from an Array.
-    packedf32size: GDE.PtrBuiltInMethod,
-    packedf32REsize: GDE.PtrBuiltInMethod,
-    packedf32Append: GDE.PtrBuiltInMethod,
-    packedf32Get: GDE.PtrBuiltInMethod,
-    packedf32Set: GDE.PtrBuiltInMethod,
-    packedf32GetIndex: GDE.PtrIndexedGetter,
-    packedf32SetIndex: GDE.PtrIndexedGetter,
+    packedi32create0: GDE.PtrConstructor,
+    packedi32create1: GDE.PtrConstructor, //create from another packedf32
+    packedi32create2: GDE.PtrConstructor, //create from an Array.
+    packedi32size: GDE.PtrBuiltInMethod,
+    packedi32REsize: GDE.PtrBuiltInMethod,
+    packedi32Append: GDE.PtrBuiltInMethod,
+    packedi32Get: GDE.PtrBuiltInMethod,
+    packedi32Set: GDE.PtrBuiltInMethod,
+    packedi32GetIndex: GDE.PtrIndexedGetter,
+    packedi32SetIndex: GDE.PtrIndexedGetter,
 }
 
 arrayhelp: ArrayHelp

@@ -17,6 +17,9 @@ API :: struct  {
     classDBConstructObj: GDE.InterfaceClassdbConstructObject,
     object_set_instance: GDE.InterfaceObjectSetInstance,
     object_set_instance_binding: GDE.InterfaceObjectSetInstanceBinding,
+    mem_alloc: GDE.InterfaceMemAlloc,
+    mem_free: GDE.InterfaceMemFree,
+
     //Variant related function pointers.
     classdbRegisterExtensionClassMethod: GDE.InterfaceClassdbRegisterExtensionClassMethod,
 
@@ -75,8 +78,8 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     api.classDBConstructObj = cast(GDE.InterfaceClassdbConstructObject)p_get_proc_address("classdb_construct_object")
     api.object_set_instance = cast(GDE.InterfaceObjectSetInstance)p_get_proc_address("object_set_instance")
     api.object_set_instance_binding = cast(GDE.InterfaceObjectSetInstanceBinding)p_get_proc_address("object_set_instance_binding")
-    //api.mem_alloc = cast(GDE.InterfaceMemAlloc)p_get_proc_address("mem_alloc")
-    //api.mem_free = cast(GDE.InterfaceMemFree)p_get_proc_address("mem_free")
+    api.mem_alloc = cast(GDE.InterfaceMemAlloc)p_get_proc_address("mem_alloc")
+    api.mem_free = cast(GDE.InterfaceMemFree)p_get_proc_address("mem_free")
     api.classdbRegisterExtensionClassMethod = cast(GDE.InterfaceClassdbRegisterExtensionClassMethod)p_get_proc_address("classdb_register_extension_class_method")
     api.classDBRegisterExtensionClassProperty = cast(GDE.InterfaceClassdbRegisterExtensionClassProperty)p_get_proc_address("classdb_register_extension_class_property")
     //Really nice that you can (hopefully) just cast the pointer to the function's proc type. Signature?
@@ -99,7 +102,7 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     variantfrom.FloatToVariant = variantgetters.getVariantFromTypeConstructor(.FLOAT)
     variantto.floatFromVariant = variantgetters.getVariantToTypeConstuctor(.FLOAT)
     variantto.intFromVariant = variantgetters.getVariantToTypeConstuctor(.INT)
-    variantto.packedf32arrayFromVariant = variantgetters.getVariantToTypeConstuctor(.PACKED_FLOAT32_ARRAY)
+    variantto.packedf32arrayFromVariant = variantgetters.getVariantToTypeConstuctor(.PACKED_INT64_ARRAY)
     
     //constructor.vector2ConstructorXY = variantGetPtrConstructor(.VECTOR2, 3) // See extension_api.json for indices. ??? So... a Vector2 isn't generic like it is in Raylib. It has specific names for each use case. Madness.
     //What happens if you don't use the correct index? Does Godot throw a fit because the names aren't exactly the same?
@@ -109,12 +112,15 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     variantfrom.boolToVariant = variantgetters.getVariantFromTypeConstructor(.BOOL)
     variantfrom.rec2ToVariant = variantgetters.getVariantFromTypeConstructor(.RECT2)
     variantfrom.Transform2dToVariant = variantgetters.getVariantFromTypeConstructor(.TRANSFORM2D)
-    variantfrom.packedf32arrayToVariant = variantgetters.getVariantFromTypeConstructor(.PACKED_FLOAT32_ARRAY)
+    variantfrom.packedf32arrayToVariant = variantgetters.getVariantFromTypeConstructor(.PACKED_INT64_ARRAY)
 
     api.indexGetBind = cast(GDE.GDExtensionInterfaceVariantGetPtrIndexedGetter)p_get_proc_address("variant_get_ptr_indexed_getter")
     api.indexSetBind = cast(GDE.GDExtensionInterfaceVariantGetPtrIndexedSetter)p_get_proc_address("variant_get_ptr_indexed_setter")
-    arrayhelp.packedf32GetIndex = api.indexGetBind(.PACKED_FLOAT32_ARRAY)
-    arrayhelp.packedf32SetIndex = api.indexSetBind(.PACKED_FLOAT32_ARRAY)
+    
+    arrayhelp.packedi32GetIndex = api.indexGetBind(.PACKED_INT64_ARRAY)
+    arrayhelp.packedi32SetIndex = api.indexSetBind(.PACKED_INT64_ARRAY)
+    arrayhelp.packedi32create0 = variantGetPtrConstructor(.PACKED_INT64_ARRAY, 0)
+    arrayhelp.packedi32create1 = variantGetPtrConstructor(.PACKED_INT64_ARRAY, 1)
     
     //constructor.variantNil = cast(GDE.InterfaceVariantNewNil)api.p_get_proc_address("variant_new_nil")
     //constructor.variantToVec2Constructor = cast(GDE.TypeFromVariantConstructorFunc)api.getVariantToTypeConstuctor(.VECTOR2)

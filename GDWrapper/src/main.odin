@@ -9,7 +9,9 @@ import str "core:strings"
 import s "core:slice"
 
 @export
-godot_entry_init :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress, p_library: GDE.ClassLibraryPtr, r_initialization: ^GDE.Initialization) {
+godot_entry_init :: proc "c" (p_get_proc_address : GDE.InterfaceGetProcAddress, p_library: GDE.ClassLibraryPtr, r_initialization: ^GDE.Initialization) {
+    context = runtime.default_context()
+    
     GDW.Library = p_library
     GDW.loadAPI(p_get_proc_address)
 
@@ -107,32 +109,9 @@ initialize_gdexample_module :: proc "c" (p_userdata: rawptr, p_level:  GDE.Initi
     fmt.printfln("THEVARIANTtrans2: ", (cast(^GDE.Transform2d)(transmute(rawptr)variant.data[1]))^)
     fmt.printfln("THEVALUEtrans2: %b", trans2[:])
     
-    boolean: GDE.Bool = false
-    GDW.variantfrom.boolToVariant(&variant, &boolean)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
-    fmt.printfln("THEVALUE: %b", boolean)
+    //Remember, this allocates on a pointer, so need to destroy it.
+    GDW.destructors.variantDestroy(&variant)
     
-    mypacked:= make([dynamic]f32)
-    append_elems(&mypacked, 3)
-    uninitptr: GDE.Variant
-    packed: GDE.PackedVector2Array 
-    proxy: = new(u64)
-    fmt.println(size_of(packed))
-    packed = {proxy = proxy, data = raw_data(mypacked[:])}
-    packed2: GDE.PackedFloat32Array = {0}
-    GDW.variantfrom.packedf32arrayToVariant(&uninitptr, &packed)
-    fmt.printfln("THEVARIANTpacked: %b", uninitptr.data[:])
-    fmt.printfln("THEVARIANTpacked: 23", transmute(rawptr)uninitptr.data[1])
-    fmt.println("THEVALUEpacked: ", packed)
-    fmt.printfln("THEVARIANTpacked: 23", (cast([^]rawptr)(transmute(rawptr)uninitptr.data[1])))
-
-
-    
-    returned : GDE.PackedVector2Array
-    GDW.variantto.packedf32arrayFromVariant(&returned, &uninitptr)
-    fmt.printfln("THEVARIANTpacked: %b", uninitptr.data[:])
-    fmt.printfln("THEVARIANTpacked: %b", (cast([^]f32)(transmute(rawptr)uninitptr.data[1]))[0])
-    fmt.println("THEVALUEpacked: ", returned)
 
     class_name: GDE.StringName
     parent_class_name: GDE.StringName
@@ -150,9 +129,11 @@ initialize_gdexample_module :: proc "c" (p_userdata: rawptr, p_level:  GDE.Initi
     GDW.variantfrom.StringNameToVariant(&variant, &parent_class_name)
     fmt.printfln("THEVARIANT: %b", variant.data[:])
     fmt.printfln("THEVALUE: %b", parent_class_name[:])
-    fmt.println(variant.data[1] == parent_class_name[0])
+    //fmt.println(variant.data[1] == parent_class_name[0])
 
     fmt.println("ENUM MAX: ", i32(GDE.VariantType.VARIANT_MAX))
+
+    GDW.destructors.variantDestroy(&variant)
 
     
     iconString: GDE.gdstring
@@ -226,22 +207,22 @@ gdexample_class_bind_method :: proc "c" () {
     //fmt.println("bind methods")
 
     arrayClass:= new(GDE.StringName)
-    GDW.stringconstruct.stringNameNewLatin(&arrayClass, "PackedFloat32Array", false)
+    GDW.stringconstruct.stringNameNewLatin(&arrayClass, "PackedInt64Array", false)
     arraySize:= new(GDE.StringName)
     GDW.stringconstruct.stringNameNewLatin(&arraySize, "size", false)
-    GDW.arrayhelp.packedf32size = GDW.api.builtinMethodBindCall(.PACKED_FLOAT32_ARRAY, &arraySize, 3173160232)
+    GDW.arrayhelp.packedi32size = GDW.api.builtinMethodBindCall(.PACKED_INT64_ARRAY, &arraySize, 3173160232)
 
     GDW.stringconstruct.stringNameNewLatin(&arraySize, "resize", false)
-    GDW.arrayhelp.packedf32REsize = GDW.api.builtinMethodBindCall(.PACKED_FLOAT32_ARRAY, &arraySize, 848867239)
+    GDW.arrayhelp.packedi32REsize = GDW.api.builtinMethodBindCall(.PACKED_INT64_ARRAY, &arraySize, 848867239)
     
     GDW.stringconstruct.stringNameNewLatin(&arraySize, "append", false)
-    GDW.arrayhelp.packedf32Append = GDW.api.builtinMethodBindCall(.PACKED_FLOAT32_ARRAY, &arraySize, 4094791666)
+    GDW.arrayhelp.packedi32Append = GDW.api.builtinMethodBindCall(.PACKED_INT64_ARRAY, &arraySize, 694024632)
 
     GDW.stringconstruct.stringNameNewLatin(&arraySize, "get", false)
-    GDW.arrayhelp.packedf32Get = GDW.api.builtinMethodBindCall(.PACKED_FLOAT32_ARRAY, &arraySize, 1401583798)
+    GDW.arrayhelp.packedi32Get = GDW.api.builtinMethodBindCall(.PACKED_INT64_ARRAY, &arraySize, 4103005248)
 
     GDW.stringconstruct.stringNameNewLatin(&arraySize, "set", false)
-    GDW.arrayhelp.packedf32Set = GDW.api.builtinMethodBindCall(.PACKED_FLOAT32_ARRAY, &arraySize, 1113000516)
+    GDW.arrayhelp.packedi32Set = GDW.api.builtinMethodBindCall(.PACKED_INT64_ARRAY, &arraySize, 3638975848)
 
     
     //GDW.arrayhelp.packedf32Get(&uninitptr.data[1], raw_data(args[:]), &newValue, 1)
@@ -285,60 +266,7 @@ gdexampleClassCreateInstance :: proc "c" (p_class_user_data: rawptr, p_notify_po
     //Heap cleanup.
     GDW.destructors.stringNameDestructor(&class_name)
 
-    
-    mypacked:= make([dynamic]f32)
-    append_elems(&mypacked, 42, 64, 92, 32)
-    fmt.println(mypacked)
-    uninitptr: GDE.Variant
-    packed: GDE.PackedVector2Array 
-    proxy1: u64= 32
-    fmt.println(size_of(packed))
-    fmt.println("array made")
-    packed = {proxy = &proxy1, data = raw_data(mypacked)}
-    packed2: GDE.PackedFloat32Array = {0}
-    GDW.variantfrom.packedf32arrayToVariant(&uninitptr.data, &packed)
-    //fmt.printfln("THEVARIANTpacked: %b", uninitptr.data[:])
-    //fmt.printfln("THEVARIANTpacked: %b", (cast([^]f32)(transmute(rawptr)uninitptr.data[1]))[0])
-    fmt.println("THEVALUEpacked: ", packed)
-
-    returnedSize: int
-    GDW.arrayhelp.packedf32size(&uninitptr.data, nil, &returnedSize, 0)
-    fmt.println("Size of array: ",returnedSize)
-
-    newSize: GDE.Int = 1
-    newValue: f32 = 22
-    args:= [?]rawptr {&newSize}
-    args2:= [?]rawptr {&newValue}
-    //fmt.println((cast(^GDE.Int)args[0])^)
-    GDW.arrayhelp.packedf32REsize(&uninitptr.data, raw_data(args[:]), &returnedSize, 1)
-    fmt.println("Size of array: ",returnedSize)
-
-    didSet: GDE.Bool = true
-    GDW.arrayhelp.packedf32Append(&uninitptr.data, raw_data(args2[:]), &didSet, 1)
-    fmt.println("did set: ", didSet)
-
-    GDW.arrayhelp.packedf32size(&uninitptr.data[1], raw_data(args[:]), &returnedSize, 1)
-    fmt.println("Size of array: ",returnedSize)
-//
-    //newSize=0
-    retValue: f32 = 22
-    //GDW.arrayhelp.packedf32GetIndex(&uninitptr.data[1], 0, &retValue)
-    //fmt.println("return 1: ", retValue)
-    //
-    //GDW.arrayhelp.packedf32GetIndex(&uninitptr.data[1], 1, &retValue)
-    //fmt.println("return 1: ", retValue)
-//
-    //GDW.arrayhelp.packedf32Set(&uninitptr.data[1], raw_data(args2[:]), nil, 2)
-    ////fmt.println("Size of array: ",returnedSize)
-    //GDW.arrayhelp.packedf32SetIndex(&uninitptr.data[1], 0, &retValue)
-    //
-    index:int=1
-    GDW.arrayhelp.packedf32GetIndex(&uninitptr.data, index, &retValue)
-    fmt.println("return 2: ", retValue)
-    
-    fmt.println((((cast(^[5]rawptr)(transmute(rawptr)uninitptr.data[1])))))
-    //fmt.println(((cast(^[8]^[x]f32)(transmute(rawptr)uninitptr.data[1]))[0]))
-    //fmt.println(packed.data[0])
+    //uninitptr: GDE.Variant
 
     return object
 }
@@ -366,10 +294,86 @@ class_constructor :: proc "c" (self: ^GDExample) {
     context = runtime.default_context()
     //fmt.println("class constructor")
     self.amplitude = 10
-    //self.speed = 1
-    //self.timePassed = 0
-    //self.time_emit = 0
-    //GDW.stringconstruct.stringNameNewLatin(&self.position_changed, "position_changed", false)
+
+    
+    uninitptr: GDE.Variant
+    godotMake: GDE.PackedVector2Array
+    myArray:= make([dynamic]f32)
+    append_elem(&myArray, 563)
+    storage:rawptr
+    
+
+    multiray:= [?]rawptr {raw_data(myArray)}
+
+    //fmt.println(godotMake)
+    //GDW.arrayhelp.packedf32create0(&godotMake, nil)
+    fmt.println(godotMake)
+
+    
+    //Need to setup a dynamic(?) array with the first u64 containing the size.
+    sizeIncluded:=make([dynamic]u64)
+    resize(&sizeIncluded, 5)
+    //defer delete(sizeIncluded)
+
+    sizeIncluded[0] = 4
+    sizeIncluded[1] = 4
+    sizeIncluded[2] = 4
+    sizeIncluded[3] = 4
+    sizeIncluded[4] = 4
+
+    fmt.println("size value: ", (transmute([dynamic]u32)sizeIncluded)[:1])
+    fmt.println("value: ", sizeIncluded[2])
+    godotMake.data = raw_data(transmute([dynamic]f32)sizeIncluded)
+
+    //godotMake:= GDW.api.mem_alloc(size_of(GDE.PackedVector2Array))
+    //fmt.println((cast(^GDE.PackedVector2Array)godotMake)^)
+    ray:=[?]rawptr{&godotMake}
+    fmt.println(uninitptr)
+    newSize: u64 = 1
+    newValue: i64 = 97
+    args:= [?]rawptr {&newSize}
+    args2:= [?]rawptr {&newValue}
+    index:u64=0
+    set:= [?]rawptr {&index, &newValue}
+    returnedSize: u64
+    
+
+    newpackedmake:= [?]rawptr{storage, &sizeIncluded[1]}
+    fmt.println("address of 1: ", &sizeIncluded[1])
+    fmt.println("address of 1: (size)", &sizeIncluded[0])
+    fmt.println("My array data: ", newpackedmake)
+    
+    from:= []rawptr {&newpackedmake}
+
+    testCreate:= [?]rawptr{storage, nil}
+    GDW.arrayhelp.packedi32create1(&testCreate, raw_data(from[:]))
+    fmt.println("My array data: ", newpackedmake)
+    
+    fmt.println(uninitptr)
+    fmt.println("My array data: ", sizeIncluded)
+    //fmt.println((cast(^[4]u64)((transmute(^[6]rawptr)uninitptr.data[1])[3]))^)
+
+    fmt.println("variant pointer: ", &uninitptr)
+    GDW.arrayhelp.packedi32size(&newpackedmake, nil, &returnedSize, 0)
+    fmt.println("Size: ", returnedSize)
+    //fmt.println((cast(^[4]u64)((transmute(^[6]rawptr)uninitptr.data[1])[3]))^)
+
+    //GDW.arrayhelp.packedi32Set(&newpackedmake, raw_data(set[:]), nil, 2)
+    GDW.arrayhelp.packedi32Get(&newpackedmake, raw_data(set[:]), &returnedSize, 1)
+    fmt.println("Get Got: ", returnedSize)
+
+    fmt.println("variant pointer: ", uninitptr)
+    GDW.variantfrom.packedf32arrayToVariant(&uninitptr, &newpackedmake)
+    fmt.println("variant pointer: ", uninitptr)
+
+    fmt.println("My array data: ", newpackedmake)
+    fmt.println("data: ",cast(^[4]i64)((cast(^[8]rawptr)uninitptr.data[1])[3]))
+    //fmt.println("data: ", (((cast(^[4]^[4]i64)uninitptr.data[1]))[3]))
+
+    //You can get to the array directly, but Godot has no GDExtension function to act directly on an array.
+    //GDW.arrayhelp.packedi32Get(cast(^[4]i64)((cast(^[8]rawptr)uninitptr.data[1])[3]), raw_data(set[:]), nil, 2)
+    GDW.destructors.variantDestroy(&uninitptr)
+
 }
 
 class_destructor  :: proc  "c" (self: ^GDExample) {
