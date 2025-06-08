@@ -174,21 +174,21 @@ CallError :: struct {
 	expected: i32,
 }
 
-VariantFromTypeConstructorFunc	:: proc(UninitializedVariantPtr, TypePtr);
-TypeFromVariantConstructorFunc	:: proc(UninitializedTypePtr, VariantPtr);
-VariantGetInternalPtrFunc 		:: proc(VariantPtr) -> rawptr;
-PtrOperatorEvaluator 			:: proc(p_left: ConstTypePtr, 		 p_right: ConstTypePtr, 	  r_result: TypePtr);
-PtrBuiltInMethod 				:: proc(p_base: TypePtr, 			 p_args: ConstTypePtrargs, r_return:  TypePtr, p_argument_count: i64);
-PtrConstructor 					:: proc(p_base: UninitializedTypePtr, p_args: ConstTypePtrargs);
-PtrDestructor 					:: proc(p_base: TypePtr);
-PtrSetter 						:: proc(p_base: TypePtr, 	 p_value: ConstTypePtr);
-PtrGetter 						:: proc(p_base: ConstTypePtr, r_value:  TypePtr);
-PtrIndexedSetter 				:: proc(p_base: TypePtr, 	 p_index: Int, 		  p_value: ConstTypePtr);
-PtrIndexedGetter 				:: proc(p_base: ConstTypePtr, p_index:  Int, 		  r_value: TypePtr);
-PtrKeyedSetter 					:: proc(p_base: TypePtr, 	 p_key: ConstTypePtr,  p_value: ConstTypePtr);
-PtrKeyedGetter 					:: proc(p_base: ConstTypePtr, p_key:  ConstTypePtr, r_value: TypePtr);
-PtrKeyedChecker 				:: proc(p_base: ConstVariantPtr, p_key:  ConstVariantPtr) -> u32;
-PtrUtilityFunction 				:: proc(r_return: TypePtr,    p_args: ConstTypePtrargs, p_argument_count: i64);
+VariantFromTypeConstructorFunc	:: proc "c" (UninitializedVariantPtr, TypePtr);
+TypeFromVariantConstructorFunc	:: proc "c" (UninitializedTypePtr, VariantPtr);
+VariantGetInternalPtrFunc 		:: proc "c" (VariantPtr) -> rawptr;
+PtrOperatorEvaluator 			:: proc "c" (p_left: ConstTypePtr, 		 p_right: ConstTypePtr, 	  r_result: TypePtr);
+PtrBuiltInMethod 				:: proc "c" (p_base: TypePtr, 			 p_args: ConstTypePtrargs, r_return:  TypePtr, p_argument_count: i64);
+PtrConstructor 					:: proc "c" (p_base: UninitializedTypePtr, p_args: ConstTypePtrargs);
+PtrDestructor 					:: proc "c" (p_base: TypePtr);
+PtrSetter 						:: proc "c" (p_base: TypePtr, 	 p_value: ConstTypePtr);
+PtrGetter 						:: proc "c" (p_base: ConstTypePtr, r_value:  TypePtr);
+PtrIndexedSetter 				:: proc "c" (p_base: TypePtr, 	 p_index: Int, 		  p_value: ConstTypePtr);
+PtrIndexedGetter 				:: proc "c" (p_base: ConstTypePtr, p_index:  Int, 		  r_value: TypePtr);
+PtrKeyedSetter 					:: proc "c" (p_base: TypePtr, 	 p_key: ConstTypePtr,  p_value: ConstTypePtr);
+PtrKeyedGetter 					:: proc "c" (p_base: ConstTypePtr, p_key:  ConstTypePtr, r_value: TypePtr);
+PtrKeyedChecker 				:: proc "c" (p_base: ConstVariantPtr, p_key:  ConstVariantPtr) -> u32;
+PtrUtilityFunction 				:: proc "c" (r_return: TypePtr,    p_args: ConstTypePtrargs, p_argument_count: i64);
 
 
 ClassCreationInfo2 :: struct {
@@ -265,9 +265,9 @@ InstanceBindingCallbacks :: struct {
 	 reference_callback: InstanceBindingReferenceCallback,
 }
 
-InstanceBindingCreateCallback 	:: proc(p_token: rawptr, p_instance: rawptr) -> rawptr;
-InstanceBindingFreeCallback 		:: proc(p_token: rawptr, p_instance: rawptr, p_binding: rawptr);
-InstanceBindingReferenceCallback :: proc(p_token: rawptr, p_binding: rawptr, p_reference: Bool) -> Bool;
+InstanceBindingCreateCallback 	:: proc "c" (p_token: rawptr, p_instance: rawptr) -> rawptr;
+InstanceBindingFreeCallback 		:: proc "c" (p_token: rawptr, p_instance: rawptr, p_binding: rawptr);
+InstanceBindingReferenceCallback :: proc "c" (p_token: rawptr, p_binding: rawptr, p_reference: Bool) -> Bool;
 
 
 /* EXTENSION CLASSES */
@@ -443,7 +443,7 @@ InterfaceStringNameNewWithUtf8Chars :: proc "c" (r_dest: UninitializedStringName
  *
  * @return A pointer to the newly created Object.
  */
-InterfaceClassdbConstructObject :: proc(p_classname: ConstStringNamePtr) -> ObjectPtr
+InterfaceClassdbConstructObject :: proc "c" (p_classname: ConstStringNamePtr) -> ObjectPtr
 
 
 /**
@@ -475,7 +475,7 @@ InterfaceClassdbRegisterExtensionClass4 :: proc "c" ( p_library: ClassLibraryPtr
  * @param p_class_name A pointer to a StringName with the class name.
  * @param p_method_info A pointer to a ClassMethodInfo struct.
  */
-InterfaceClassdbRegisterExtensionClassMethod :: proc(p_library: ClassLibraryPtr, p_class_name: ConstStringNamePtr, p_method_info: ^ClassMethodInfo);
+InterfaceClassdbRegisterExtensionClassMethod :: proc "c" (p_library: ClassLibraryPtr, p_class_name: ConstStringNamePtr, p_method_info: ^ClassMethodInfo);
 
 
 /**
@@ -492,7 +492,7 @@ InterfaceClassdbRegisterExtensionClassMethod :: proc(p_library: ClassLibraryPtr,
  * @param p_setter A pointer to a StringName with the name of the setter method.
  * @param p_getter A pointer to a StringName with the name of the getter method.
  */
-InterfaceClassdbRegisterExtensionClassProperty :: proc(p_library: ClassLibraryPtr, p_class_name: ConstStringNamePtr,
+InterfaceClassdbRegisterExtensionClassProperty :: proc "c" (p_library: ClassLibraryPtr, p_class_name: ConstStringNamePtr,
 				p_info: ^PropertyInfo, p_setter: ConstStringNamePtr, p_getter: ConstStringNamePtr);
 
 /**
@@ -509,7 +509,7 @@ InterfaceClassdbRegisterExtensionClassProperty :: proc(p_library: ClassLibraryPt
  *
  * @return A pointer to the newly created Object.
  */
-InterfaceClassdbConstructObject2 :: proc(p_classname: ConstStringNamePtr) -> ObjectPtr
+InterfaceClassdbConstructObject2 :: proc "c" (p_classname: ConstStringNamePtr) -> ObjectPtr
 
 
 /**
@@ -522,7 +522,7 @@ InterfaceClassdbConstructObject2 :: proc(p_classname: ConstStringNamePtr) -> Obj
  * @param p_classname A pointer to a StringName with the registered extension class's name.
  * @param p_instance A pointer to the extension class instance.
  */
-InterfaceObjectSetInstance :: proc( p_o: ObjectPtr, p_classname: ConstStringNamePtr, p_instance: ClassInstancePtr); /* p_classname should be a registered extension class and should extend the p_o object's class. */
+InterfaceObjectSetInstance :: proc "c" ( p_o: ObjectPtr, p_classname: ConstStringNamePtr, p_instance: ClassInstancePtr); /* p_classname should be a registered extension class and should extend the p_o object's class. */
 
 
 /**
@@ -536,7 +536,7 @@ InterfaceObjectSetInstance :: proc( p_o: ObjectPtr, p_classname: ConstStringName
  * @param p_binding A pointer to the instance binding.
  * @param p_callbacks A pointer to a InstanceBindingCallbacks struct.
  */
-InterfaceObjectSetInstanceBinding :: proc(p_o: ObjectPtr, p_token: rawptr, p_binding: rawptr, p_callbacks: InstanceBindingCallbacks);
+InterfaceObjectSetInstanceBinding :: proc "c" (p_o: ObjectPtr, p_token: rawptr, p_binding: rawptr, p_callbacks: InstanceBindingCallbacks);
 
 
 /* INTERFACE: Memory */
@@ -557,7 +557,7 @@ InterfaceObjectSetInstanceBinding :: proc(p_o: ObjectPtr, p_token: rawptr, p_bin
  *
  * @return A pointer to the allocated memory, or NULL if unsuccessful.
  */
-InterfaceMemAlloc :: proc(p_bytes: uint) -> rawptr;
+InterfaceMemAlloc :: proc "c" (p_bytes: uint) -> rawptr;
 
 /**
  * @name mem_realloc
@@ -570,7 +570,7 @@ InterfaceMemAlloc :: proc(p_bytes: uint) -> rawptr;
  *
  * @return A pointer to the allocated memory, or NULL if unsuccessful.
  */
-InterfaceMemRealloc :: proc(p_ptr: rawptr, p_bytes: uint) -> rawptr;
+InterfaceMemRealloc :: proc "c" (p_ptr: rawptr, p_bytes: uint) -> rawptr;
 
 /**
  * @name mem_free
@@ -580,7 +580,7 @@ InterfaceMemRealloc :: proc(p_ptr: rawptr, p_bytes: uint) -> rawptr;
  *
  * @param p_ptr A pointer to the previously allocated memory.
  */
-InterfaceMemFree :: proc(p_ptr: rawptr);
+InterfaceMemFree :: proc "c" (p_ptr: rawptr);
 
 InterfaceGlobalGetSingleton :: proc "c" (p_name: ConstStringNamePtr) -> ObjectPtr
 
@@ -628,7 +628,7 @@ InterfaceStringNewWithLatin1Chars :: proc "c" (r_dest: UninitializedStringPtr, p
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-8 encoded C string (null terminated).
  */
-InterfaceStringNewWithUtf8Chars :: proc(r_dest: UninitializedStringPtr, p_contents: cstring);
+InterfaceStringNewWithUtf8Chars :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring);
 
 
 /**
@@ -640,7 +640,7 @@ InterfaceStringNewWithUtf8Chars :: proc(r_dest: UninitializedStringPtr, p_conten
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-16 encoded C string (null terminated).
  */
-InterfaceStringNewWithUtf16Chars :: proc(r_dest: UninitializedStringPtr, p_contents: cstring);
+InterfaceStringNewWithUtf16Chars :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring);
 
 /**
  * @name string_new_with_utf32_chars
@@ -651,7 +651,7 @@ InterfaceStringNewWithUtf16Chars :: proc(r_dest: UninitializedStringPtr, p_conte
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a UTF-32 encoded C string (null terminated).
  */
-InterfaceStringNewWithUtf32Chars :: proc(r_dest: UninitializedStringPtr, p_contents: cstring);
+InterfaceStringNewWithUtf32Chars :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring);
 
 /**
  * @name string_new_with_wide_chars
@@ -662,7 +662,7 @@ InterfaceStringNewWithUtf32Chars :: proc(r_dest: UninitializedStringPtr, p_conte
  * @param r_dest A pointer to a Variant to hold the newly created String.
  * @param p_contents A pointer to a wide C string (null terminated).
  */
-InterfaceStringNewWithWideChars :: proc(r_dest: UninitializedStringPtr, p_contents: cstring);
+InterfaceStringNewWithWideChars :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring);
 
 /**
  * @name string_new_with_latin1_chars_and_len
@@ -674,7 +674,7 @@ InterfaceStringNewWithWideChars :: proc(r_dest: UninitializedStringPtr, p_conten
  * @param p_contents A pointer to a Latin-1 encoded C string.
  * @param p_size The number of characters (= number of bytes).
  */
-InterfaceStringNewWithLatin1CharsAndLen :: proc(r_dest: UninitializedStringPtr, p_contents: cstring, p_size: Int);
+InterfaceStringNewWithLatin1CharsAndLen :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring, p_size: Int);
 
 /**
  * @name string_new_with_utf8_chars_and_len
@@ -687,7 +687,7 @@ InterfaceStringNewWithLatin1CharsAndLen :: proc(r_dest: UninitializedStringPtr, 
  * @param p_contents A pointer to a UTF-8 encoded C string.
  * @param p_size The number of bytes (not code units).
  */
-InterfaceStringNewWithUtf8CharsAndLen :: proc(r_dest: UninitializedStringPtr, p_contents: cstring, p_size: Int);
+InterfaceStringNewWithUtf8CharsAndLen :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring, p_size: Int);
 
 /**
  * @name string_new_with_utf8_chars_and_len2
@@ -701,7 +701,7 @@ InterfaceStringNewWithUtf8CharsAndLen :: proc(r_dest: UninitializedStringPtr, p_
  *
  * @return Error code signifying if the operation successful.
  */
-InterfaceStringNewWithUtf8CharsAndLen2 :: proc(r_dest: UninitializedStringPtr, p_contents: cstring, p_size: Int) -> Int;
+InterfaceStringNewWithUtf8CharsAndLen2 :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring, p_size: Int) -> Int;
 
 /**
  * @name string_new_with_utf16_chars_and_len
@@ -714,7 +714,7 @@ InterfaceStringNewWithUtf8CharsAndLen2 :: proc(r_dest: UninitializedStringPtr, p
  * @param p_contents A pointer to a UTF-16 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-InterfaceStringNewWithUtf16CharsAndLen :: proc(r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: Int);
+InterfaceStringNewWithUtf16CharsAndLen :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: Int);
 
 /**
  * @name string_new_with_utf16_chars_and_len2
@@ -729,7 +729,7 @@ InterfaceStringNewWithUtf16CharsAndLen :: proc(r_dest: UninitializedStringPtr, p
  *
  * @return Error code signifying if the operation successful.
  */
-InterfaceStringNewWithUtf16CharsAndLen2 :: proc( r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: Int, p_default_little_endian: Bool) -> Int;
+InterfaceStringNewWithUtf16CharsAndLen2 :: proc "c" ( r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: Int, p_default_little_endian: Bool) -> Int;
 
 /**
  * @name string_new_with_utf32_chars_and_len
@@ -741,7 +741,7 @@ InterfaceStringNewWithUtf16CharsAndLen2 :: proc( r_dest: UninitializedStringPtr,
  * @param p_contents A pointer to a UTF-32 encoded C string.
  * @param p_size The number of characters (not bytes).
  */
-InterfaceStringNewWithUtf32CharsAndLen :: proc(r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: Int);
+InterfaceStringNewWithUtf32CharsAndLen :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: Int);
 
 /**
  * @name string_new_with_wide_chars_and_len
@@ -753,7 +753,7 @@ InterfaceStringNewWithUtf32CharsAndLen :: proc(r_dest: UninitializedStringPtr, p
  * @param p_contents A pointer to a wide C string.
  * @param p_size The number of characters (not bytes).
  */
-InterfaceStringNewWithWideCharsAndLen :: proc(r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: int);
+InterfaceStringNewWithWideCharsAndLen :: proc "c" (r_dest: UninitializedStringPtr, p_contents: cstring, p_char_count: int);
 
 
 /**
@@ -766,7 +766,7 @@ InterfaceStringNewWithWideCharsAndLen :: proc(r_dest: UninitializedStringPtr, p_
  *
  * @return A pointer to a function that can create a Variant of the given type from a raw value.
  */
-InterfaceGetVariantFromTypeConstructor :: proc(p_type: VariantType) -> VariantFromTypeConstructorFunc;
+InterfaceGetVariantFromTypeConstructor :: proc "c" (p_type: VariantType) -> VariantFromTypeConstructorFunc;
 
 
 
@@ -798,7 +798,7 @@ InterfacePrintWarningWithMessage :: proc "c" (p_description,p_message,p_function
  *
  * @return A pointer to a function that can get the raw value from a Variant of the given type.
  */
-InterfaceGetVariantToTypeConstructor :: proc(p_type: VariantType) -> TypeFromVariantConstructorFunc;
+InterfaceGetVariantToTypeConstructor :: proc "c" (p_type: VariantType) -> TypeFromVariantConstructorFunc;
 
 
 /**
@@ -811,7 +811,7 @@ InterfaceGetVariantToTypeConstructor :: proc(p_type: VariantType) -> TypeFromVar
  *
  * @return The variant type.
  */
-InterfaceVariantGetType :: proc(p_self: ConstVariantPtr) -> VariantType;
+InterfaceVariantGetType :: proc "c" (p_self: ConstVariantPtr) -> VariantType;
 
 
 /**
@@ -826,7 +826,7 @@ InterfaceVariantGetType :: proc(p_self: ConstVariantPtr) -> VariantType;
  *
  * @return A pointer to a function that can evaluate the given Variant operator on the given Variant types.
  */
- InterfaceVariantGetPtrOperatorEvaluator :: proc(p_operator: VariantOperator, p_type_a: VariantType, p_type_b: VariantType) -> PtrOperatorEvaluator;
+ InterfaceVariantGetPtrOperatorEvaluator :: proc "c" (p_operator: VariantOperator, p_type_a: VariantType, p_type_b: VariantType) -> PtrOperatorEvaluator;
 
 
  
@@ -927,7 +927,7 @@ InterfaceObjectMethodBindCall :: proc "c" (p_method_bind: MethodBindPtr, p_insta
  *
  * @return A pointer to a function that can call a builtin method on a type of Variant.
  */
- InterfaceVariantGetPtrBuiltinMethod :: proc(p_type: VariantType, p_method: ConstStringNamePtr, p_hash: Int) -> PtrBuiltInMethod;
+ InterfaceVariantGetPtrBuiltinMethod :: proc "c" (p_type: VariantType, p_method: ConstStringNamePtr, p_hash: Int) -> PtrBuiltInMethod;
 
 /**
  * @name variant_get_ptr_indexed_getter
@@ -939,7 +939,7 @@ InterfaceObjectMethodBindCall :: proc "c" (p_method_bind: MethodBindPtr, p_insta
  *
  * @return A pointer to a function that can get an index on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrIndexedGetter :: proc(p_type: VariantType) -> PtrIndexedGetter;
+GDExtensionInterfaceVariantGetPtrIndexedGetter :: proc "c" (p_type: VariantType) -> PtrIndexedGetter;
 
 /**
  * @name variant_get_ptr_indexed_setter
@@ -951,4 +951,4 @@ GDExtensionInterfaceVariantGetPtrIndexedGetter :: proc(p_type: VariantType) -> P
  *
  * @return A pointer to a function that can set an index on the given Variant type.
  */
- GDExtensionInterfaceVariantGetPtrIndexedSetter :: proc(p_type: VariantType) -> PtrIndexedSetter;
+ GDExtensionInterfaceVariantGetPtrIndexedSetter :: proc "c" (p_type: VariantType) -> PtrIndexedSetter;

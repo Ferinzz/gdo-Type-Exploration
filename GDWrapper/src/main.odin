@@ -81,35 +81,53 @@ initialize_gdexample_module :: proc "c" (p_userdata: rawptr, p_level:  GDE.Initi
     variant: GDE.Variant
     value: f64 = 32
     GDW.variantfrom.FloatToVariant(&variant, &value)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
+    fmt.printfln("THEVARIANT: %b", variant)
     fmt.printfln("THEVALUE: %b", transmute([1]u64)value)
+
+    variant2: GDE.Variant
+    value2: f64 = 32
+    
+    rValue:f64
+    GDW.variant_from(&variant, &value)
+    fmt.printfln("THEVARIANT: ", variant)
+    fmt.printfln("THEVALUE: ", value)
+
+
+    GDW.variant_to(&variant, &rValue)
+    fmt.printfln("THEVARIANT: ", variant)
+    fmt.printfln("THEVALUE: ", rValue)
 
     //will know what to do whether passed as a struct or as an array.
     vec2:= [2]f32 {1, 2}
     GDW.variantfrom.Vec2ToVariant(&variant, &vec2)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
+    fmt.printfln("THEVARIANT: %b", transmute([2]f32)variant.data[0])
     fmt.printfln("THEVALUE: %b", vec2[:])
-
-    vec22:GDE.Vector2
-    vec22 = {1, 2}
-    GDW.variantfrom.Vec2ToVariant(&variant, &vec22)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
-    fmt.printfln("THEVALUE: %b", vec22[:])
     
+    GDW.variant_from(&variant, cast(^GDE.Vector2)(&vec2))
+    fmt.printfln("THEVARIANT: %b", transmute([2]f32)variant.data[0])
+    fmt.printfln("THEVALUE: %b", vec2[:])
+    
+    //Even if the source is longer than what it fits it will only take what fits.
     rec2:GDE.Rec2
     rec2 = {1, 2,3,4}
-    GDW.variantfrom.rec2ToVariant(&variant, &rec2)
-    fmt.printfln("THEVARIANTrec2: %b", variant.data[:])
+    GDW.variant_from(&variant, &rec2)
+    fmt.printfln("THEVARIANTrec2: %b", transmute([4]f32)variant.data)
     fmt.printfln("THEVALUErec2: %b", rec2[:])
+    
+    GDW.variant_to(&variant, &rec2)
+    fmt.printfln("THEVARIANTrec2: %b", transmute([4]f32)variant.data)
+    fmt.printfln("THEVALUErec2: %b", rec2[:])
+    
 
     trans2:GDE.Transform2d
     trans2 = {1, 2, 3, 4, 5, 6}
-    GDW.variantfrom.Transform2dToVariant(&variant, &trans2)
-    fmt.printfln("THEVARIANTtrans2: %b", variant.data[:])
-    fmt.printfln("THEVARIANTtrans2: ", (cast(^GDE.Transform2d)(transmute(rawptr)variant.data[1]))^)
+    GDW.variant_from(&variant, &trans2)
+    fmt.printfln("THEVARIANTtrans2: %b", (transmute(^GDE.Transform2d)variant.data[0])^)
     fmt.printfln("THEVALUEtrans2: %b", trans2[:])
+    fmt.printfln("THEVALUEtrans2: %p", &trans2)
+    fmt.printfln("THEVALUEtrans2: %p", variant.data[0])
     
-    //Remember, this allocates on a pointer, so need to destroy it.
+    //Remember, Transform2d copies to a memory bucket in Godot, so need to destroy it.
     GDW.destructors.variantDestroy(&variant)
     
 
@@ -127,7 +145,7 @@ initialize_gdexample_module :: proc "c" (p_userdata: rawptr, p_level:  GDE.Initi
 
     
     GDW.variantfrom.StringNameToVariant(&variant, &parent_class_name)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
+    fmt.printfln("THEVARIANT: %b", variant)
     fmt.printfln("THEVALUE: %b", parent_class_name[:])
     //fmt.println(variant.data[1] == parent_class_name[0])
 
@@ -311,15 +329,16 @@ class_constructor :: proc "c" (self: ^GDExample) {
 
     
     //Need to setup a dynamic(?) array with the first u64 containing the size.
-    sizeIncluded:=make([dynamic]u64)
+    sizeIncluded:=make([dynamic]i64)
     resize(&sizeIncluded, 5)
     //defer delete(sizeIncluded)
 
-    sizeIncluded[0] = 4
-    sizeIncluded[1] = 4
-    sizeIncluded[2] = 4
-    sizeIncluded[3] = 4
-    sizeIncluded[4] = 4
+    sizeIncluded[0] = 0
+    sizeIncluded[1] = 0
+    sizeIncluded[2] = 1
+    sizeIncluded[3] = 1
+    sizeIncluded[4] = max(i64)
+    //sizeIncluded[5] = 4
 
     fmt.println("size value: ", (transmute([dynamic]u32)sizeIncluded)[:1])
     fmt.println("value: ", sizeIncluded[2])
@@ -338,41 +357,45 @@ class_constructor :: proc "c" (self: ^GDExample) {
     returnedSize: u64
     
 
-    newpackedmake:= [?]rawptr{storage, &sizeIncluded[1]}
-    fmt.println("address of 1: ", &sizeIncluded[1])
-    fmt.println("address of 1: (size)", &sizeIncluded[0])
+    newpackedmake:= [?]rawptr{storage, &sizeIncluded[4]}
+    fmt.println("address of 1: ", &sizeIncluded[4])
+    fmt.println("address of 1: (size)", &sizeIncluded[3])
     fmt.println("My array data: ", newpackedmake)
     
     from:= []rawptr {&newpackedmake}
 
     testCreate:= [?]rawptr{storage, nil}
-    GDW.arrayhelp.packedi32create1(&testCreate, raw_data(from[:]))
-    fmt.println("My array data: ", newpackedmake)
+    fmt.println("maybe ref count: ", sizeIncluded[2])
+    //GDW.variantfrom.packedf32arrayToVariant(&uninitptr, nil)
+    fmt.println("My Godot Type: ", testCreate)
+    fmt.println("My Godot Type: ", uninitptr)
+
+    //Does this even do anything? When everything is a null pointer or 0 it returns nothing and skips over mem allocs
+    //Eventually it even goes through the destructors for the vector and cowdata.
+    GDW.arrayhelp.packedi32create0(&testCreate, nil)
     
-    fmt.println(uninitptr)
-    fmt.println("My array data: ", sizeIncluded)
-    //fmt.println((cast(^[4]u64)((transmute(^[6]rawptr)uninitptr.data[1])[3]))^)
+    //Resize or append locks in the memory for the array. Also sets the ref count.
+    appended:=false
+    GDW.arrayhelp.packedi32Append(&testCreate, raw_data(args2[:]), &appended, 1)
+    //Resize is supposed to size to 97
+    GDW.arrayhelp.packedi32REsize(&testCreate, raw_data(args2[:]), &returnedSize, 1)
+    fmt.println(returnedSize)
+    GDW.arrayhelp.packedi32size(&testCreate, nil, &returnedSize, 0)
+    fmt.println(returnedSize)
+    fmt.println("My Godot Type: ", testCreate)
 
-    fmt.println("variant pointer: ", &uninitptr)
-    GDW.arrayhelp.packedi32size(&newpackedmake, nil, &returnedSize, 0)
-    fmt.println("Size: ", returnedSize)
-    //fmt.println((cast(^[4]u64)((transmute(^[6]rawptr)uninitptr.data[1])[3]))^)
-
-    //GDW.arrayhelp.packedi32Set(&newpackedmake, raw_data(set[:]), nil, 2)
-    GDW.arrayhelp.packedi32Get(&newpackedmake, raw_data(set[:]), &returnedSize, 1)
-    fmt.println("Get Got: ", returnedSize)
-
-    fmt.println("variant pointer: ", uninitptr)
-    GDW.variantfrom.packedf32arrayToVariant(&uninitptr, &newpackedmake)
-    fmt.println("variant pointer: ", uninitptr)
-
-    fmt.println("My array data: ", newpackedmake)
-    fmt.println("data: ",cast(^[4]i64)((cast(^[8]rawptr)uninitptr.data[1])[3]))
-    //fmt.println("data: ", (((cast(^[4]^[4]i64)uninitptr.data[1]))[3]))
-
-    //You can get to the array directly, but Godot has no GDExtension function to act directly on an array.
-    //GDW.arrayhelp.packedi32Get(cast(^[4]i64)((cast(^[8]rawptr)uninitptr.data[1])[3]), raw_data(set[:]), nil, 2)
-    GDW.destructors.variantDestroy(&uninitptr)
+    //set index 0, value 97
+    GDW.arrayhelp.packedi32Set(&testCreate, raw_data(set[:]), nil, 2)
+    GDW.arrayhelp.packedi32Get(&testCreate, raw_data(set[:]), &returnedSize, 1)
+    fmt.println(returnedSize)
+    GDW.arrayhelp.packedi32Append(&testCreate, raw_data(args2[:]), &appended, 1)
+    GDW.arrayhelp.packedi32size(&testCreate, nil, &returnedSize, 0)
+    fmt.println(returnedSize)
+    fmt.println((cast(^[98]i64)testCreate[1])^)
+    GDW.arrayhelp.packedi32Destroy(&testCreate)
+    
+    
+    
 
 }
 

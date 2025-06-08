@@ -12,94 +12,117 @@ package gdextension
 //Set to 40 if double is double precision
 //Data itself is in the _data union : https://github.com/godotengine/godot/blob/45fc515ae3574e9c1f9deacaa6960dec68a7d38b/core/variant/variant.h#L263
 //After testing won't even need to use Godot's functions. index 1 is the type enum, index 2 is the _data, I assume index 3 is ref counting or array length?
-Variant :: struct {
-    data: [3]rawptr
+Variant :: struct #align(8) {
+    VType: VariantType,
+    data: [2]u64
 }
 
+VariantData :: union #align(16) {
+		Bool,
+		i64,
+		f64,
+		^Transform2d,
+		^AABB,
+		^Basis,
+		^Transform3D,
+		^Projection,
+		rawptr, //pointer to packedarrayrefbase, Godot specific type. Do Not Handle Directly.
+        Vector2,
+        Vector2i,
+        Vector3i,
+        Vector3,
+        Vector4,
+        Vector4i,
+		//Won't be handling the object stuff directly.
+        //Below is the original Godot C++ code which reserves its struct size.
+		//[sizeof(ObjData) > (sizeof(real_t) * 4) ? sizeof(ObjData) : (sizeof(real_t) * 4)]{ 0 },
+	} 
 //optional in Godot. These are mainly to define pointer etc variable lengths in C.
 
-Int :: int    
-Bool :: b8
-float :: f64
+Int     :: int    
+Bool    :: b8
+float   :: f64
 
 
 //The use 16 if your Godot version was built with double precision support, which is not the default.
 //else use 8
-Vector2 :: [2]f32
+Vector2 :: distinct [2]f32
 
 
-Vector2i :: [2]i32
+Vector2i :: distinct [2]i32
 
 //Original has 2 Vector2
-Rec2 :: [4]f32
+Rec2 :: distinct [4]f32
 
 //Original has 2 Vector2i
-Rec2i :: [4]i32
+Rec2i :: distinct [4]i32
 
-Vector3 :: [3]f32
+Vector3 :: distinct [3]f32
 
-Vector3i :: [3]i32
+Vector3i :: distinct [3]i32
 
 //original type has 3 Vector2s
-Transform2d :: [6]f32
+Transform2d :: distinct [6]f32
 
-Vector4 :: [4]f32
+Vector4 :: distinct [4]f32
 
-Vector4i :: [4]i32
+Vector4i :: distinct [4]i32
 
 //Vector3 + d
-Plane :: [4]f32
+Plane :: distinct [4]f32
 
-Quaternion :: Vector4
+Quaternion :: distinct Vector4
 
 //2 Vector3
-AABB :: [6]f32
+AABB :: distinct [6]f32
 
 //3 Vector3
-Basis :: [9]f32
+Basis :: distinct [9]f32
 
 //Basis + Vector3
-Transfrom :: [12]f32
+Transfrom :: distinct [12]f32
 
 //4 Vector4
-Projection :: [16]f32
+Projection :: distinct [16]f32
 
-Color :: Vector4
+Transform3D :: distinct [12]f32
+
+Color :: distinct Vector4
 
 //The value we get back for a string name is just the pointer to the Godot's interned string pool.
 //If you've use the name once you'll already created a string name with the specific text you'll have already added that string to the pool.
 //What we have access to is just the pointer.
-StringName :: [1]u64
+StringName :: distinct [1]u64
 
-gdstring :: [1]u64
+gdstring :: distinct [1]u64
 
-NodePath :: [1]u64
+NodePath :: distinct [1]u64
 
 //Not actually sure what this is or what it's for.
-RID ::  [2]u64
+RID :: distinct [2]u64
 
-Object ::  [2]u64
+Object :: distinct [2]u64
 
-Callable ::  [4]u64
+Callable :: distinct [4]u64
 
-Signal ::  [4]u64
+Signal :: distinct [4]u64
 
-Dictionary ::  [1]u64
+Dictionary :: distinct [1]u64
 
-Array ::  [1]u64
+Array :: distinct [1]u64
 
 //WARNING: packed array types are just structs of helper functions. I think.
-PackedByteArray ::  [2]u64
+PackedByteArray :: distinct  [2]u64
 
-PackedInt32Array ::  [2]u64
+PackedInt32Array :: distinct  [2]u64
 
-PackedInt64Array ::  [2]u64
+PackedInt64Array :: distinct  [2]u64
 
 PackedFloat32Array :: struct{ data: u64}
 
-PackedFloat64Array ::  [2]u64
+PackedFloat64Array :: distinct  [2]u64
 
-PackedStringArray ::  [1]u64
+PackedStringArray :: distinct  [1]u64
 
 PackedVector2Array :: packedArray(f32)
 
@@ -108,11 +131,11 @@ packedArray :: struct($T: typeid) {
     data: [^]T
 }
 
-PackedVector3Array ::  [2]u64
+PackedVector3Array :: distinct  [2]u64
 
-PackedColorArray ::  [2]u64
+PackedColorArray :: distinct  [2]u64
 
-PackedVector4Array ::  [2]u64
+PackedVector4Array :: distinct  [2]u64
 
 
 

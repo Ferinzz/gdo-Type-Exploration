@@ -36,7 +36,8 @@ API :: struct  {
     objectMethodBindPtrCall: GDE.InterfaceObjectMethodBindPtrcall,
     builtinMethodBindCall: GDE.InterfaceVariantGetPtrBuiltinMethod,
     indexGetBind: GDE.GDExtensionInterfaceVariantGetPtrIndexedGetter,
-    indexSetBind: GDE.GDExtensionInterfaceVariantGetPtrIndexedSetter
+    indexSetBind: GDE.GDExtensionInterfaceVariantGetPtrIndexedSetter,
+    variantGetPtrOperatorEvaluator: GDE.InterfaceVariantGetPtrOperatorEvaluator
 }
 
 api: API
@@ -65,7 +66,7 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     //Gets a pointer to the function that will return the pointer to the function that destroys the specific variable type.
     variant_get_ptr_destructor: GDE.InterfaceVariantGetPtrDestructor  = cast(GDE.InterfaceVariantGetPtrDestructor)p_get_proc_address("variant_get_ptr_destructor")
     //Gets a pointer to the function that will return the pointer to the function that will evaluate the variable types under the specified condition.
-    variantGetPtrOperatorEvaluator: GDE.InterfaceVariantGetPtrOperatorEvaluator = cast(GDE.InterfaceVariantGetPtrOperatorEvaluator)p_get_proc_address("variant_get_ptr_operator_evaluator")
+    api.variantGetPtrOperatorEvaluator = cast(GDE.InterfaceVariantGetPtrOperatorEvaluator)p_get_proc_address("variant_get_ptr_operator_evaluator")
     variantGetPtrConstructor: GDE.InterfaceVariantGetPtrConstructor = cast(GDE.InterfaceVariantGetPtrConstructor)p_get_proc_address("variant_get_ptr_constructor")
 
     //Operators
@@ -129,6 +130,7 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     destructors.stringNameDestructor = cast(GDE.PtrDestructor)variant_get_ptr_destructor(.STRING_NAME)
     destructors.stringDestruction = cast(GDE.PtrDestructor)variant_get_ptr_destructor(.STRING)
     destructors.variantDestroy = cast(GDE.InterfaceVariantDestroy)p_get_proc_address("variant_destroy")
+    arrayhelp.packedi32Destroy = cast(GDE.PtrDestructor)variant_get_ptr_destructor(.PACKED_INT64_ARRAY)
 
     
 }
