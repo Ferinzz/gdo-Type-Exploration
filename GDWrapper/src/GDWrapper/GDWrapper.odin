@@ -35,8 +35,8 @@ API :: struct  {
     objectMethodBindCall: GDE.InterfaceObjectMethodBindCall,
     objectMethodBindPtrCall: GDE.InterfaceObjectMethodBindPtrcall,
     builtinMethodBindCall: GDE.InterfaceVariantGetPtrBuiltinMethod,
-    indexGetBind: GDE.GDExtensionInterfaceVariantGetPtrIndexedGetter,
-    indexSetBind: GDE.GDExtensionInterfaceVariantGetPtrIndexedSetter,
+    indexGetBind: GDE.InterfaceVariantGetPtrIndexedGetter,
+    indexSetBind: GDE.InterfaceVariantGetPtrIndexedSetter,
     variantGetPtrOperatorEvaluator: GDE.InterfaceVariantGetPtrOperatorEvaluator
 }
 
@@ -48,6 +48,7 @@ StringConstruct :: struct {
     stringNameNewLatin: GDE.InterfaceStringNameNewWithLatin1Chars,
     stringNewUTF8: GDE.InterfaceStringNewWithUtf8Chars,
     stringNewLatin: GDE.InterfaceStringNewWithLatin1Chars,
+    utf8FromString: GDE.InterfaceStringToUtf8Chars,
 }
 
 stringconstruct : StringConstruct
@@ -95,6 +96,7 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     stringconstruct.stringNameNewLatin = cast(GDE.InterfaceStringNameNewWithLatin1Chars)p_get_proc_address("string_name_new_with_latin1_chars")
     stringconstruct.stringNewUTF8 = cast(GDE.InterfaceStringNewWithUtf8Chars)api.p_get_proc_address("string_new_with_utf8_chars")
     stringconstruct.stringNewLatin = cast(GDE.InterfaceStringNewWithLatin1Chars)api.p_get_proc_address("string_new_with_latin1_chars")
+    stringconstruct.utf8FromString = cast(GDE.InterfaceStringToUtf8Chars)api.p_get_proc_address("string_to_utf8_chars")
 
 
     variantgetters.getVariantFromTypeConstructor = cast(GDE.InterfaceGetVariantFromTypeConstructor)p_get_proc_address("get_variant_from_type_constructor")
@@ -115,8 +117,8 @@ loadAPI :: proc(p_get_proc_address : GDE.InterfaceGetProcAddress){
     variantfrom.Transform2dToVariant = variantgetters.getVariantFromTypeConstructor(.TRANSFORM2D)
     variantfrom.packedf32arrayToVariant = variantgetters.getVariantFromTypeConstructor(.PACKED_INT64_ARRAY)
 
-    api.indexGetBind = cast(GDE.GDExtensionInterfaceVariantGetPtrIndexedGetter)p_get_proc_address("variant_get_ptr_indexed_getter")
-    api.indexSetBind = cast(GDE.GDExtensionInterfaceVariantGetPtrIndexedSetter)p_get_proc_address("variant_get_ptr_indexed_setter")
+    api.indexGetBind = cast(GDE.InterfaceVariantGetPtrIndexedGetter)p_get_proc_address("variant_get_ptr_indexed_getter")
+    api.indexSetBind = cast(GDE.InterfaceVariantGetPtrIndexedSetter)p_get_proc_address("variant_get_ptr_indexed_setter")
     
     arrayhelp.packedi32GetIndex = api.indexGetBind(.PACKED_INT64_ARRAY)
     arrayhelp.packedi32SetIndex = api.indexSetBind(.PACKED_INT64_ARRAY)

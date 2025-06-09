@@ -757,6 +757,24 @@ InterfaceStringNewWithWideCharsAndLen :: proc "c" (r_dest: UninitializedStringPt
 
 
 /**
+ * @name string_to_utf8_chars
+ * @since 4.1
+ *
+ * Converts a String to a UTF-8 encoded C string.
+ *
+ * It doesn't write a null terminator.
+ *
+ * @param p_self A pointer to the String.
+ * @param r_text A pointer to the buffer to hold the resulting data. If NULL is passed in, only the length will be computed.
+ * @param p_max_write_length The maximum number of characters that can be written to r_text. It has no affect on the return value.
+ *
+ * @return The resulting encoded string length in characters (not bytes), not including a null terminator.
+ */
+InterfaceStringToUtf8Chars :: proc(p_self: ^gdstring, r_text: [^]u8, p_max_write_length: Int) -> Int;
+
+
+
+/**
  * @name get_variant_from_type_constructor
  * @since 4.1
  *
@@ -939,7 +957,7 @@ InterfaceObjectMethodBindCall :: proc "c" (p_method_bind: MethodBindPtr, p_insta
  *
  * @return A pointer to a function that can get an index on the given Variant type.
  */
-GDExtensionInterfaceVariantGetPtrIndexedGetter :: proc "c" (p_type: VariantType) -> PtrIndexedGetter;
+InterfaceVariantGetPtrIndexedGetter :: proc "c" (p_type: VariantType) -> PtrIndexedGetter;
 
 /**
  * @name variant_get_ptr_indexed_setter
@@ -951,4 +969,4 @@ GDExtensionInterfaceVariantGetPtrIndexedGetter :: proc "c" (p_type: VariantType)
  *
  * @return A pointer to a function that can set an index on the given Variant type.
  */
- GDExtensionInterfaceVariantGetPtrIndexedSetter :: proc "c" (p_type: VariantType) -> PtrIndexedSetter;
+ InterfaceVariantGetPtrIndexedSetter :: proc "c" (p_type: VariantType) -> PtrIndexedSetter;
