@@ -7,6 +7,7 @@ import GDE "GDWrapper/gdextension"
 import "base:runtime"
 import str "core:strings"
 import s "core:slice"
+import "core:unicode/utf8"
 
 @export
 godot_entry_init :: proc "c" (p_get_proc_address : GDE.InterfaceGetProcAddress, p_library: GDE.ClassLibraryPtr, r_initialization: ^GDE.Initialization) {
@@ -78,40 +79,364 @@ initialize_gdexample_module :: proc "c" (p_userdata: rawptr, p_level:  GDE.Initi
     //GDW.methods.objectEmitSignal = GDW.classDBGetMethodBind("Object", "emit_signal", 4047867050)
     //GDW.methods.node2dGetPos = GDW.classDBGetMethodBind("Node2D", "get_position", 3341600327)
     //GDW.methods.node2dSetPosition = GDW.classDBGetMethodBind("Node2D", "set_position", 743155724)
+
+
+    //I'm not 100% sure what is easier. "force" the user to use the Godot types,
+    //or ask them to correctly pass the enum type each time.
+    //Since Godot has overlapping types, I'm not sure if it matters.
     variant: GDE.Variant
+    variant2: GDE.Variant
     value: f64 = 32
+    value2: f64 = 32
+
     GDW.variantfrom.FloatToVariant(&variant, &value)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
+    fmt.printfln("THEVARIANT: %b", variant)
     fmt.printfln("THEVALUE: %b", transmute([1]u64)value)
 
+    fmt.println("~~~~f64~~~~")
+    rValue:f64
+    GDW.variant_from(&variant, &value)
+    fmt.printfln("THEVARIANT: ", variant)
+    fmt.printfln("THEVALUE: ", value)
+
+    GDW.variant_to(&variant, &rValue)
+    fmt.printfln("THEVARIANT: ", variant)
+    fmt.printfln("THEVALUE: ", rValue)
+
     //will know what to do whether passed as a struct or as an array.
+    //^^^^Referencing the default Godot functions as used below
+    fmt.println("~~~~vec2 v2~~~~")
     vec2:= [2]f32 {1, 2}
     GDW.variantfrom.Vec2ToVariant(&variant, &vec2)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
+    fmt.printfln("THEVARIANT: %b", transmute([2]f32)variant.data[0])
     fmt.printfln("THEVALUE: %b", vec2[:])
-
-    vec22:GDE.Vector2
-    vec22 = {1, 2}
-    GDW.variantfrom.Vec2ToVariant(&variant, &vec22)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
-    fmt.printfln("THEVALUE: %b", vec22[:])
     
+    GDW.variant_from(&variant, cast(^GDE.Vector2)(&vec2))
+    fmt.printfln("THEVARIANT: %b", transmute([2]f32)variant.data[0])
+    fmt.printfln("THEVALUE: %b", vec2[:])
+    
+    //Even if the source is longer than what it fits it will only take what fits.
+    fmt.println("~~~~rec2 f32~~~~")
     rec2:GDE.Rec2
     rec2 = {1, 2,3,4}
-    GDW.variantfrom.rec2ToVariant(&variant, &rec2)
-    fmt.printfln("THEVARIANTrec2: %b", variant.data[:])
+    GDW.variant_from(&variant, &rec2)
+    fmt.printfln("THEVARIANTrec2: %b", transmute([4]f32)variant.data)
     fmt.printfln("THEVALUErec2: %b", rec2[:])
-
+    
+    GDW.variant_to(&variant, &rec2)
+    fmt.printfln("THEVARIANTrec2: %b", transmute([4]f32)variant.data)
+    fmt.printfln("THEVALUErec2: %b", rec2[:])
+    
+    fmt.println("~~~~transform2d~~~~")
     trans2:GDE.Transform2d
     trans2 = {1, 2, 3, 4, 5, 6}
-    GDW.variantfrom.Transform2dToVariant(&variant, &trans2)
-    fmt.printfln("THEVARIANTtrans2: %b", variant.data[:])
-    fmt.printfln("THEVARIANTtrans2: ", (cast(^GDE.Transform2d)(transmute(rawptr)variant.data[1]))^)
-    fmt.printfln("THEVALUEtrans2: %b", trans2[:])
+    GDW.variant_from(&variant, &trans2)
+    fmt.printfln("THEVARIANTtrans2: %b", (transmute(^GDE.Transform2d)variant.data[0])^)
+    fmt.printfln("THEVALUEtrans2: %b", trans2)
+    fmt.printfln("THEVALUEtrans2: %p", &trans2)
+    fmt.printfln("THEVALUEtrans2: %p", variant.data[0])
     
-    //Remember, this allocates on a pointer, so need to destroy it.
+    //Remember, Transform2d copies to a memory bucket in Godot, so need to destroy it.
     GDW.destructors.variantDestroy(&variant)
     
+    fmt.println("~~~~Bool~~~~")
+    bools:GDE.Bool=false
+    GDW.variant_from(&variant, &bools)
+    fmt.println("The variant: ", cast(b8)variant.data[0])
+    bools = true
+    GDW.variant_from(&variant, &bools)
+    fmt.println("The variant: ", cast(b8)variant.data[0])
+
+    fmt.println("~~~~String~~~~")
+    myString: GDE.gdstring
+    GDW.stringconstruct.stringNewUTF8(&myString, "This is my string")
+    //fmt.println(str.string_from_ptr(transmute([^]u8)variant.data[0], 17))
+    GDW.variant_from(&variant, &myString)
+    fmt.println("String in Variant (it's unicode) : ", (cstring(transmute(rawptr)variant.data[0])))
+    //fmt.println("String data? : ", cstring(transmute(rawptr)variant.data[0]))
+    destString: GDE.gdstring
+    GDW.variant_to(&variant, &destString)
+    //Shows that Godot creates strings that are Unicode.
+    fmt.printfln("Final string: ", (transmute([^]u8)destString[0])[:17])
+    buff:[20]u8
+    returnedSize:GDE.Int
+    returnedSize = GDW.stringconstruct.utf8FromString(&destString, raw_data(buff[:]), 20)
+    fmt.println("GDString back to utf8", string(buff[:returnedSize]))
+
+    //Don't forget to destroy your strings.
+    GDW.destructors.stringDestruction(&myString)
+    GDW.destructors.stringDestruction(&destString)
+    GDW.destructors.variantDestroy(&variant)
+
+    fmt.println("~~~~Vector2i~~~~")
+    vec2i: GDE.Vector2i = {3, 4}
+    fmt.println("Original Vector2i", vec2i)
+    GDW.variant_from(&variant, &vec2i)
+    fmt.println("Value stored in Variant: ", transmute(GDE.Vector2i)(variant.data[0]))
+    r_vec2i: GDE.Vector2i
+    GDW.variant_to(&variant, &r_vec2i)
+    fmt.println("Value returned from Variant: ", r_vec2i)
+    
+    //variant3: GDE.Variant
+
+    fmt.println("~~~~Rec2i~~~~")
+    rec2i: GDE.Rec2i
+    rec2i= {3, 4, 9, 10}
+    fmt.println("Original Rec2i", rec2i)
+    GDW.variant_from(&variant, &rec2i)
+    fmt.println("Value stored in reci Variant: ", transmute([4]i32)variant.data)
+    r_rec2i: GDE.Rec2i
+    GDW.variant_to(&variant, &r_rec2i)
+    fmt.println("Value returned from reci Variant: ", r_rec2i)
+
+    fmt.println("~~~~vec3~~~~")
+    vec3: GDE.Vector3 = {3,4,5}
+    fmt.println("Original vec3: ", vec3)
+    GDW.variant_from(&variant, &vec3)
+    //fmt.println("Value stored in vec3 variant: ", transmute([4]f32)variant.data)
+    fmt.println("Value stored in vec3 variant: ", (cast(^[3]f32)(&variant.data))^)
+    r_vec3: GDE.Vector3
+    GDW.variant_to(&variant, &r_vec3)
+    fmt.println("Returned vec3 from variant: ", r_vec3)
+
+    aPlane: GDE.Plane = {1,2,3,4}
+    fmt.println("~~~~Plane~~~~")
+    fmt.println("Original Plane values: ", aPlane)
+    GDW.variant_from(&variant, &aPlane)
+    fmt.println("Value stored in Plane variant: ", (cast(^GDE.Plane)(&variant.data))^)
+    r_Plane: GDE.Plane
+    GDW.variant_to(&variant, &r_Plane)
+    fmt.println("Value returned from variant: ", r_Plane)
+
+    fmt.println("~~~~Quaternion~~~~")
+    aQuat: GDE.Quaternion = quaternion(w=1, x=2, y=3, z=4)
+    fmt.println("Original Quaternion: ", aQuat)
+    GDW.variant_from(&variant, &aQuat)
+    fmt.println("Value stored in quaternion variant: ", (cast(^GDE.Quaternion)(&variant.data))^)
+    r_Quat:GDE.Quaternion
+    GDW.variant_to(&variant, &r_Quat)
+    fmt.println("Quaternion value returned from variant: ", r_Quat)
+
+    fmt.println("~~~~AABB~~~~")
+    someAABB: GDE.AABB = {4,5,6,7,8,9}
+    fmt.println("Original AABB value: ", someAABB)
+    GDW.variant_from(&variant, &someAABB)
+    fmt.println("Value stored in AABB variant: ", (cast(^^GDE.AABB)&variant.data)^^)
+    r_AABB: GDE.AABB
+    GDW.variant_to(&variant, &r_AABB)
+    fmt.println("Value returned from AABB variant: ", r_AABB)
+
+    fmt.println("AABB doesn't fit in 128b. Don't forget to destroy.")
+    fmt.println("GDW.destructors.variantDestroy(&variant)")
+    GDW.destructors.variantDestroy(&variant)
+
+    fmt.println("~~~~Basis~~~~")
+    someBasis: GDE.Basis = {0,1,2,
+                            3,4,5,
+                            6,7,8}
+    fmt.println("Value stored in Basis: ", someBasis)
+    GDW.variant_from(&variant, &someBasis)
+    fmt.println("Value stored in Basis variant: ", (cast(^^GDE.Basis)&variant.data)^^)
+    r_Basis: GDE.Basis
+    GDW.variant_to(&variant, &r_Basis)
+    fmt.println("Value returned from variant: ", r_Basis)
+
+    
+    fmt.println("Basis doesn't fit in 128b. Don't forget to destroy.")
+    fmt.println("GDW.destructors.variantDestroy(&variant)")
+    GDW.destructors.variantDestroy(&variant)
+
+    fmt.println("~~~~Transform3d~~~~")
+    someTrans3d: GDE.Transform3D
+    fmt.println("Original value of Transform3d: ", someTrans3d)
+    GDW.variant_from(&variant, &someTrans3d)
+    fmt.println("Value stored in trans3d variant: ", (cast(^^GDE.Transform3D)&variant.data)^^)
+    r_trans3d: GDE.Transform3D
+    GDW.variant_to(&variant, &r_trans3d)
+    fmt.println("Valure returned from variant: ", r_trans3d)
+    
+    fmt.println("Tranform3d doesn't fit in 128b. Don't forget to destroy.")
+    fmt.println("GDW.destructors.variantDestroy(&variant)")
+    GDW.destructors.variantDestroy(&variant)
+
+
+    fmt.println("~~~~Projection~~~~")
+    someProjection: GDE.Projection  =  {1,2,3,4,
+                                        5,6,7,8,
+                                        9,10,11,12,
+                                        13,14,15,16}
+    fmt.println("Original value in Projection: ", someProjection)
+    GDW.variant_from(&variant, &someProjection)
+    fmt.println("Value stored in projection variant: ", (cast(^^GDE.Projection)&variant.data)^^)
+    r_projection: GDE.Projection
+    GDW.variant_to(&variant, &r_projection)
+    fmt.println("Value returned from projection variant: ", r_projection)
+    
+    fmt.println("Projection doesn't fit in 128b. Don't forget to destroy.")
+    fmt.println("GDW.destructors.variantDestroy(&variant)")
+    GDW.destructors.variantDestroy(&variant)
+
+    fmt.println("~~~~Color~~~~")
+    someColor: GDE.Color = {4,5,6,7}
+    fmt.println("Original value in color: ")
+    GDW.variant_from(&variant, &someColor)
+    fmt.println("Value stored in color variant: ", (cast(^GDE.Color)&variant.data)^)
+    r_color: GDE.Color
+    GDW.variant_to(&variant, &r_color)
+    fmt.println("Value returned from color variant: ", r_color)
+
+
+    fmt.println("~~~~StringName~~~~")
+    fmt.println("StringNames need to be created via Godot built-ins.")
+    aStringName: GDE.StringName
+    GDW.stringconstruct.stringNameNewLatin(&aStringName, "Node2D", false)
+    fmt.println("StringNames are pointers to a hashed value in Godot's StringName memory pool.")
+    fmt.println("If you want to compare StringNames you can simply check if they're pointing to the same address.")
+    fmt.println("Originalj StringName address: ", aStringName)
+    GDW.variant_from(&variant, &aStringName)
+    fmt.println("Pointer stored in StringName variant: ", transmute(rawptr)variant.data[0])
+    r_stringname: GDE.StringName
+    GDW.variant_to(&variant, &r_stringname)
+    fmt.println("Returned StringName: ", r_stringname)
+
+    fmt.println("You don't always need to destroy stringnames, but if you don't need to use it again you should.")
+    GDW.destructors.stringNameDestructor(&aStringName)
+    GDW.destructors.variantDestroy(&variant)
+
+
+    fmt.println("~~~~NodePath~~~~")
+    fmt.println("NodePaths are strings representing the path to a Node in a tree much like a filesystem representations.")
+    fmt.println("A/B")
+    GDW.stringconstruct.stringNewUTF8(&myString, "A/B")
+    GDW.variant_from(&variant, &myString)
+    fmt.println("Strings just hold pointers to things, so hope I hope this worked.")
+
+    GDW.destructors.stringDestruction(&myString)
+
+
+    fmt.println("~~~~RID~~~~")
+    fmt.println("RIDs aren't going to be something we build ourselves.")
+    
+    fmt.println("~~~~Object~~~~")
+    fmt.println("Object aren't going to be something we build ourselves.")
+    
+    fmt.println("~~~~Callable~~~~")
+    fmt.println("Callable aren't going to be something we build ourselves.")
+    
+    fmt.println("~~~~Signal~~~~")
+    fmt.println("I think Signal aren't going to be something we build ourselves.")
+    fmt.println("I haven't had to use this, so not certain how this is used. When we receive signals? Or share signals?")
+
+
+    fmt.println("~~~~PackedArray~~~~")
+
+    /*
+    //Not sure it's breaking if not in the create. Might look into this later.
+    //Either way, will need to expand the array helper accordingly.
+    uninitptr: GDE.Variant
+    godotMake: GDE.PackedVector2Array
+    myArray:= make([dynamic]f32)
+    append_elem(&myArray, 563)
+    storage:rawptr
+    
+
+    multiray:= [?]rawptr {raw_data(myArray)}
+
+    //fmt.println(godotMake)
+    //GDW.arrayhelp.packedf32create0(&godotMake, nil)
+    fmt.println(godotMake)
+
+    
+    //Need to setup a dynamic(?) array with the first u64 containing the size.
+    sizeIncluded:=make([dynamic]i64)
+    resize(&sizeIncluded, 5)
+    //defer delete(sizeIncluded)
+
+    sizeIncluded[0] = 0
+    sizeIncluded[1] = 0
+    sizeIncluded[2] = 1
+    sizeIncluded[3] = 1
+    sizeIncluded[4] = max(i64)
+    //sizeIncluded[5] = 4
+
+    fmt.println("size value: ", (transmute([dynamic]u32)sizeIncluded)[:1])
+    fmt.println("value: ", sizeIncluded[2])
+    godotMake[1] = transmute(u64)(raw_data(transmute([dynamic]f32)sizeIncluded))
+
+    //godotMake:= GDW.api.mem_alloc(size_of(GDE.PackedVector2Array))
+    //fmt.println((cast(^GDE.PackedVector2Array)godotMake)^)
+    ray:=[?]rawptr{&godotMake}
+    fmt.println(uninitptr)
+    newSize: u64 = 1
+    newValue: i64 = 97
+    args:= [?]rawptr {&newSize}
+    args2:= [?]rawptr {&newValue}
+    index:u64=0
+    set:= [?]rawptr {&index, &newValue}
+    
+
+    newpackedmake:= [?]rawptr{storage, &sizeIncluded[4]}
+    fmt.println("address of 1: ", &sizeIncluded[4])
+    fmt.println("address of 1: (size)", &sizeIncluded[3])
+    fmt.println("My array data: ", newpackedmake)
+    
+    from:= []rawptr {&newpackedmake}
+
+    testCreate:= [?]rawptr{storage, nil}
+    fmt.println("maybe ref count: ", sizeIncluded[2])
+    //GDW.variantfrom.packedf32arrayToVariant(&uninitptr, nil)
+    fmt.println("My Godot Type: ", testCreate)
+    fmt.println("My Godot Type: ", uninitptr)
+
+    //Does this even do anything? When everything is a null pointer or 0 it returns nothing and skips over mem allocs
+    //Eventually it even goes through the destructors for the vector and cowdata.
+    GDW.arrayhelp.packedi32create0(&testCreate, nil)
+    
+    //Resize or append locks in the memory for the array. Also sets the ref count.
+    appended:=false
+    GDW.arrayhelp.packedi32Append(&testCreate, raw_data(args2[:]), &appended, 1)
+    //Resize is supposed to size to 97
+    GDW.arrayhelp.packedi32REsize(&testCreate, raw_data(args2[:]), &returnedSize, 1)
+    fmt.println(returnedSize)
+    GDW.arrayhelp.packedi32size(&testCreate, nil, &returnedSize, 0)
+    fmt.println(returnedSize)
+    fmt.println("My Godot Type: ", testCreate)
+
+    //set index 0, value 97
+    GDW.arrayhelp.packedi32Set(&testCreate, raw_data(set[:]), nil, 2)
+    GDW.arrayhelp.packedi32Get(&testCreate, raw_data(set[:]), &returnedSize, 1)
+    fmt.println(returnedSize)
+    GDW.arrayhelp.packedi32Append(&testCreate, raw_data(args2[:]), &appended, 1)
+    GDW.arrayhelp.packedi32size(&testCreate, nil, &returnedSize, 0)
+    fmt.println(returnedSize)
+    fmt.println((cast(^[98]i64)testCreate[1])^)
+    GDW.arrayhelp.packedi32Destroy(&testCreate)*/
+
+
+    /*
+    Vec3itoVariant,
+    Vec4toVariant,
+    Vec4itoVariant,
+    
+    RidtoVariant,
+    ObjecttoVariant,
+    CallabletoVariant,
+    SignaltoVariant,
+
+    //All these need built-in methods found in the json file.
+    DictionarytoVariant,
+
+    ArraytoVariant,
+    PackedByteArraytoVariant,
+    Packedi32ArraytoVariant,
+    Packedi64ArraytoVariant,
+    Packedf32ArraytoVariant,
+    Packedf64ArraytoVariant,
+    PackedStringArraytoVariant,
+    PackedVec2ArraytoVariant,
+    PackedColorArraytoVariant,
+    PackedVec4ArraytoVariant,*/
+
 
     class_name: GDE.StringName
     parent_class_name: GDE.StringName
@@ -127,7 +452,7 @@ initialize_gdexample_module :: proc "c" (p_userdata: rawptr, p_level:  GDE.Initi
 
     
     GDW.variantfrom.StringNameToVariant(&variant, &parent_class_name)
-    fmt.printfln("THEVARIANT: %b", variant.data[:])
+    fmt.printfln("THEVARIANT: %b", variant)
     fmt.printfln("THEVALUE: %b", parent_class_name[:])
     //fmt.println(variant.data[1] == parent_class_name[0])
 
@@ -311,19 +636,20 @@ class_constructor :: proc "c" (self: ^GDExample) {
 
     
     //Need to setup a dynamic(?) array with the first u64 containing the size.
-    sizeIncluded:=make([dynamic]u64)
+    sizeIncluded:=make([dynamic]i64)
     resize(&sizeIncluded, 5)
     //defer delete(sizeIncluded)
 
-    sizeIncluded[0] = 4
-    sizeIncluded[1] = 4
-    sizeIncluded[2] = 4
-    sizeIncluded[3] = 4
-    sizeIncluded[4] = 4
+    sizeIncluded[0] = 0
+    sizeIncluded[1] = 0
+    sizeIncluded[2] = 1
+    sizeIncluded[3] = 1
+    sizeIncluded[4] = max(i64)
+    //sizeIncluded[5] = 4
 
     fmt.println("size value: ", (transmute([dynamic]u32)sizeIncluded)[:1])
     fmt.println("value: ", sizeIncluded[2])
-    godotMake.data = raw_data(transmute([dynamic]f32)sizeIncluded)
+    godotMake[1] = transmute(u64)(raw_data(transmute([dynamic]f32)sizeIncluded))
 
     //godotMake:= GDW.api.mem_alloc(size_of(GDE.PackedVector2Array))
     //fmt.println((cast(^GDE.PackedVector2Array)godotMake)^)
@@ -338,41 +664,45 @@ class_constructor :: proc "c" (self: ^GDExample) {
     returnedSize: u64
     
 
-    newpackedmake:= [?]rawptr{storage, &sizeIncluded[1]}
-    fmt.println("address of 1: ", &sizeIncluded[1])
-    fmt.println("address of 1: (size)", &sizeIncluded[0])
+    newpackedmake:= [?]rawptr{storage, &sizeIncluded[4]}
+    fmt.println("address of 1: ", &sizeIncluded[4])
+    fmt.println("address of 1: (size)", &sizeIncluded[3])
     fmt.println("My array data: ", newpackedmake)
     
     from:= []rawptr {&newpackedmake}
 
     testCreate:= [?]rawptr{storage, nil}
-    GDW.arrayhelp.packedi32create1(&testCreate, raw_data(from[:]))
-    fmt.println("My array data: ", newpackedmake)
+    fmt.println("maybe ref count: ", sizeIncluded[2])
+    //GDW.variantfrom.packedf32arrayToVariant(&uninitptr, nil)
+    fmt.println("My Godot Type: ", testCreate)
+    fmt.println("My Godot Type: ", uninitptr)
+
+    //Does this even do anything? When everything is a null pointer or 0 it returns nothing and skips over mem allocs
+    //Eventually it even goes through the destructors for the vector and cowdata.
+    GDW.arrayhelp.packedi32create0(&testCreate, nil)
     
-    fmt.println(uninitptr)
-    fmt.println("My array data: ", sizeIncluded)
-    //fmt.println((cast(^[4]u64)((transmute(^[6]rawptr)uninitptr.data[1])[3]))^)
+    //Resize or append locks in the memory for the array. Also sets the ref count.
+    appended:=false
+    GDW.arrayhelp.packedi32Append(&testCreate, raw_data(args2[:]), &appended, 1)
+    //Resize is supposed to size to 97
+    GDW.arrayhelp.packedi32REsize(&testCreate, raw_data(args2[:]), &returnedSize, 1)
+    fmt.println(returnedSize)
+    GDW.arrayhelp.packedi32size(&testCreate, nil, &returnedSize, 0)
+    fmt.println(returnedSize)
+    fmt.println("My Godot Type: ", testCreate)
 
-    fmt.println("variant pointer: ", &uninitptr)
-    GDW.arrayhelp.packedi32size(&newpackedmake, nil, &returnedSize, 0)
-    fmt.println("Size: ", returnedSize)
-    //fmt.println((cast(^[4]u64)((transmute(^[6]rawptr)uninitptr.data[1])[3]))^)
-
-    //GDW.arrayhelp.packedi32Set(&newpackedmake, raw_data(set[:]), nil, 2)
-    GDW.arrayhelp.packedi32Get(&newpackedmake, raw_data(set[:]), &returnedSize, 1)
-    fmt.println("Get Got: ", returnedSize)
-
-    fmt.println("variant pointer: ", uninitptr)
-    GDW.variantfrom.packedf32arrayToVariant(&uninitptr, &newpackedmake)
-    fmt.println("variant pointer: ", uninitptr)
-
-    fmt.println("My array data: ", newpackedmake)
-    fmt.println("data: ",cast(^[4]i64)((cast(^[8]rawptr)uninitptr.data[1])[3]))
-    //fmt.println("data: ", (((cast(^[4]^[4]i64)uninitptr.data[1]))[3]))
-
-    //You can get to the array directly, but Godot has no GDExtension function to act directly on an array.
-    //GDW.arrayhelp.packedi32Get(cast(^[4]i64)((cast(^[8]rawptr)uninitptr.data[1])[3]), raw_data(set[:]), nil, 2)
-    GDW.destructors.variantDestroy(&uninitptr)
+    //set index 0, value 97
+    GDW.arrayhelp.packedi32Set(&testCreate, raw_data(set[:]), nil, 2)
+    GDW.arrayhelp.packedi32Get(&testCreate, raw_data(set[:]), &returnedSize, 1)
+    fmt.println(returnedSize)
+    GDW.arrayhelp.packedi32Append(&testCreate, raw_data(args2[:]), &appended, 1)
+    GDW.arrayhelp.packedi32size(&testCreate, nil, &returnedSize, 0)
+    fmt.println(returnedSize)
+    fmt.println((cast(^[98]i64)testCreate[1])^)
+    GDW.arrayhelp.packedi32Destroy(&testCreate)
+    
+    
+    
 
 }
 
